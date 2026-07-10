@@ -585,11 +585,17 @@ export async function deleteModeratorAction(id: string) {
 
 export async function updateSettingsAction(input: Record<string, any>) {
   await requireAdmin();
-  await db.settings.upsert({
-    where: { id: "singleton" },
-    create: { id: "singleton", ...input },
-    update: { ...input },
-  });
+  const existing = await db.settings.findFirst();
+  if (existing) {
+    await db.settings.update({
+      where: { id: existing.id },
+      data: { ...input },
+    });
+  } else {
+    await db.settings.create({
+      data: { ...input },
+    });
+  }
   revalidatePath("/");
   revalidatePath("/admin/settings");
   return { ok: true };

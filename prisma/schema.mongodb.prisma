@@ -24,9 +24,9 @@ model User {
   role            String   @default("STUDENT") // ADMIN | MODERATOR | STUDENT
   avatar          String?
   preferredLang   String   @default("ar")
-  referralCode    String   @unique @default(auto()) @map("_id") @db.ObjectId
+  referralCode    String   @unique @default(uuid())
   referredById    String?  @db.ObjectId
-  referredBy      User?    @relation("Referrals", fields: [referredById], references: [id])
+  referredBy      User?    @relation("Referrals", fields: [referredById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   referrals       User[]   @relation("Referrals")
   referralRewards Float    @default(0)
   createdAt       DateTime @default(now())
@@ -44,7 +44,6 @@ model User {
   moderator     Moderator?
   announcements Announcement[]
 
-  @@index([phone])
   @@index([role])
 }
 
@@ -166,7 +165,7 @@ model Subscription {
   startDate  DateTime @default(now())
   endDate    DateTime
   isActive   Boolean  @default(true)
-  paymentId  String?  @db.ObjectId
+  paymentId  String?  @unique @db.ObjectId
   payment    Payment? @relation(fields: [paymentId], references: [id])
   enrollments Enrollment[]
   createdAt  DateTime @default(now())
@@ -322,7 +321,7 @@ model Announcement {
   bodyAr    String
   bodyEn    String
   createdBy String   @db.ObjectId
-  createdByUser User @relation(fields: [createdBy], references: [id])
+  createdByUser User @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -365,7 +364,7 @@ model Moderator {
 //  Settings (singleton)
 // ---------------------------------------------------------------------------
 model Settings {
-  id                String   @id @default("singleton")
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
   platformNameAr    String   @default("أكاديمية سونيك")
   platformNameEn    String   @default("Sonic Academy")
   logo              String?

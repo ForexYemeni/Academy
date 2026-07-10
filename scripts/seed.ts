@@ -369,30 +369,32 @@ async function main() {
   }
   console.log(`✅ ${faqs.length} FAQs ensured`);
 
-  // 10. Settings singleton
-  await db.settings.upsert({
-    where: { id: "singleton" },
-    create: {
-      id: "singleton",
-      platformNameAr: "أكاديمية سونيك",
-      platformNameEn: "Sonic Academy",
-      primaryColor: "#7C3AED",
-      accentColor: "#06B6D4",
-      descriptionAr: "منصة تعليمية صوتية فاخرة لتعلّم أي شيء بالاستماع، أينما كنت.",
-      descriptionEn: "A premium audio learning platform to learn anything by listening, anywhere.",
-      contactEmail: "support@sonicacademy.app",
-      contactPhone: "+967711111111",
-      contactAddress: "صنعاء، اليمن",
-      currency: "YER",
-      welcomeMessageAr: "مرحباً بك في أكاديمية سونيك! استمع وتعلّم في أي وقت.",
-      welcomeMessageEn: "Welcome to Sonic Academy! Listen and learn anytime.",
-      registrationEnabled: true,
-      communityEnabled: true,
-      notificationsEnabled: true,
-    },
-    update: {},
-  });
-  console.log("✅ Platform settings initialized");
+  // 10. Settings singleton (use findFirst since MongoDB doesn't allow string IDs)
+  const existingSettings = await db.settings.findFirst();
+  if (!existingSettings) {
+    await db.settings.create({
+      data: {
+        platformNameAr: "أكاديمية سونيك",
+        platformNameEn: "Sonic Academy",
+        primaryColor: "#7C3AED",
+        accentColor: "#06B6D4",
+        descriptionAr: "منصة تعليمية صوتية فاخرة لتعلّم أي شيء بالاستماع، أينما كنت.",
+        descriptionEn: "A premium audio learning platform to learn anything by listening, anywhere.",
+        contactEmail: "support@sonicacademy.app",
+        contactPhone: "+967711111111",
+        contactAddress: "صنعاء، اليمن",
+        currency: "YER",
+        welcomeMessageAr: "مرحباً بك في أكاديمية سونيك! استمع وتعلّم في أي وقت.",
+        welcomeMessageEn: "Welcome to Sonic Academy! Listen and learn anytime.",
+        registrationEnabled: true,
+        communityEnabled: true,
+        notificationsEnabled: true,
+      },
+    });
+    console.log("✅ Platform settings initialized");
+  } else {
+    console.log("ℹ️  Platform settings already exist");
+  }
 
   // 11. Sample coupon
   const existingCoupon = await db.coupon.findUnique({ where: { code: "WELCOME10" } });

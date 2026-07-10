@@ -39,7 +39,7 @@ export default async function Home() {
         orderBy: { order: "asc" },
         take: 8,
       }),
-      db.settings.findUnique({ where: { id: "singleton" } }),
+      db.settings.findFirst(),
     ]);
 
   return (
