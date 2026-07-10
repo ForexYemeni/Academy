@@ -34,7 +34,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
 import { useI18n, type Locale } from "@/lib/i18n";
-import { logoutAction } from "@/lib/auth-actions";
+import { useLogout } from "@/hooks/use-logout";
 import { cn } from "@/lib/utils";
 
 export function StudentShell({
@@ -56,6 +56,7 @@ export function StudentShell({
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { logout } = useLogout();
 
   const navItems = [
     { href: "/student", label: t("student.welcome"), icon: Home },
@@ -161,14 +162,10 @@ export function StudentShell({
                     {t("nav.home")}
                   </Link>
                 </DropdownMenuItem>
-                <form action={logoutAction}>
-                  <button type="submit" className="w-full">
-                    <DropdownMenuItem>
-                      <LogOut className="w-4 h-4 me-2 rtl:rotate-180" />
-                      {t("nav.logout")}
-                    </DropdownMenuItem>
-                  </button>
-                </form>
+                <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                  <LogOut className="w-4 h-4 me-2 rtl:rotate-180" />
+                  {t("nav.logout")}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

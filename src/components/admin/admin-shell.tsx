@@ -38,7 +38,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
 import { useI18n, type Locale } from "@/lib/i18n";
-import { logoutAction } from "@/lib/auth-actions";
+import { useLogout } from "@/hooks/use-logout";
 import { cn } from "@/lib/utils";
 
 type Moderator = {
@@ -61,6 +61,7 @@ export function AdminShell({
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { logout } = useLogout();
 
   const isAdmin = user.role === "ADMIN";
   const mod = user.moderator;
@@ -223,12 +224,10 @@ export function AdminShell({
                 })}
               </nav>
               <div className="p-3 border-t border-sidebar-border">
-                <form action={logoutAction}>
-                  <Button type="submit" variant="ghost" className="w-full justify-start rounded-xl">
-                    <LogOut className="w-4 h-4 me-2 rtl:rotate-180" />
-                    {t("nav.logout")}
-                  </Button>
-                </form>
+                <Button onClick={logout} variant="ghost" className="w-full justify-start rounded-xl">
+                  <LogOut className="w-4 h-4 me-2 rtl:rotate-180" />
+                  {t("nav.logout")}
+                </Button>
               </div>
             </motion.aside>
           </>
@@ -299,14 +298,10 @@ export function AdminShell({
                     {t("nav.home")}
                   </Link>
                 </DropdownMenuItem>
-                <form action={logoutAction}>
-                  <button type="submit" className="w-full">
-                    <DropdownMenuItem>
-                      <LogOut className="w-4 h-4 me-2 rtl:rotate-180" />
-                      {t("nav.logout")}
-                    </DropdownMenuItem>
-                  </button>
-                </form>
+                <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                  <LogOut className="w-4 h-4 me-2 rtl:rotate-180" />
+                  {t("nav.logout")}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

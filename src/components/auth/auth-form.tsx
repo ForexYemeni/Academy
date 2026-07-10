@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -9,13 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useI18n } from "@/lib/i18n";
-import { loginAction, registerAction } from "@/lib/auth-actions";
 import { toast } from "sonner";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const { t, locale } = useI18n();
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isRegister = mode === "register";
@@ -23,20 +22,54 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setPending(true);
+
     const formData = new FormData(e.currentTarget);
-    startTransition(async () => {
-      const result = isRegister
-        ? await registerAction(formData)
-        : await loginAction(formData);
-      if (!result.ok) {
-        setError(result.error);
-        toast.error(t(result.error));
+    const payload = {
+      fullName: formData.get("fullName") as string,
+      phone: formData.get("phone") as string,
+      password: formData.get("password") as string,
+      referralCode: typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("ref")
+        : null,
+    };
+
+    try {
+      const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login";
+      const body = isRegister
+        ? payload
+        : { phone: payload.phone, password: payload.password };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) {
+        setError(data.error);
+        toast.error(t(data.error));
         return;
       }
+
       toast.success(t("auth.success"));
-      router.push(isRegister ? "/student" : "/");
+
+      // Redirect based on role
+      const role = data.user?.role;
+      if (role === "ADMIN" || role === "MODERATOR") {
+        router.push("/admin");
+      } else {
+        router.push(isRegister ? "/student" : "/student");
+      }
       router.refresh();
-    });
+    } catch (err: any) {
+      setError("Server error");
+      toast.error("Server error");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
