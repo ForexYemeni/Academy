@@ -28,6 +28,7 @@ type Enrollment = {
   completedLessons: number;
   totalListenSeconds: number;
   expiresAt: Date | null;
+  lastLessonId: string | null;
   course: {
     id: string;
     titleAr: string;
@@ -37,7 +38,6 @@ type Enrollment = {
     _count: { lessons: number };
     lessons: { id: string; titleAr: string; titleEn: string }[];
   };
-  lastLesson: { id: string; titleAr: string; titleEn: string } | null;
 };
 
 function formatDuration(sec: number) {
@@ -166,18 +166,22 @@ export function StudentOverview({
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {e.completedLessons}/{e.course._count.lessons} {t("course.lessons")}
-                      {e.lastLesson && (
-                        <span className="mx-1">·</span>
-                      )}
-                      {e.lastLesson && (
-                        <span className="truncate">
-                          {locale === "ar" ? e.lastLesson.titleAr : e.lastLesson.titleEn}
-                        </span>
-                      )}
+                      {e.lastLessonId && (() => {
+                        const lastLesson = e.course.lessons.find((l) => l.id === e.lastLessonId);
+                        if (!lastLesson) return null;
+                        return (
+                          <>
+                            <span className="mx-1">·</span>
+                            <span className="truncate">
+                              {locale === "ar" ? lastLesson.titleAr : lastLesson.titleEn}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </p>
                   </div>
                   <Button asChild size="sm" className="rounded-full shrink-0">
-                    <Link href={`/student/courses/${e.course.id}/lessons/${e.lastLesson?.id || e.course.lessons[0]?.id || ""}`}>
+                    <Link href={`/student/courses/${e.course.id}/lessons/${e.lastLessonId || e.course.lessons[0]?.id || ""}`}>
                       <Play className="w-4 h-4" />
                     </Link>
                   </Button>

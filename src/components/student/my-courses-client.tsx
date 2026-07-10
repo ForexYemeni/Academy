@@ -15,6 +15,7 @@ type Enrollment = {
   completedLessons: number;
   totalListenSeconds: number;
   expiresAt: Date | null;
+  lastLessonId: string | null;
   course: {
     id: string;
     titleAr: string;
@@ -27,7 +28,6 @@ type Enrollment = {
     _count: { lessons: number };
     lessons: { id: string; titleAr: string; titleEn: string; duration: number; isFree: boolean }[];
   };
-  lastLesson: { id: string } | null;
 };
 
 function formatDuration(sec: number) {
@@ -63,7 +63,7 @@ export function MyCoursesClient({ enrollments }: { enrollments: Enrollment[] }) 
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {enrollments.map((e, i) => {
-            const nextLessonId = e.lastLesson?.id || e.course.lessons[0]?.id || "";
+            const nextLessonId = e.lastLessonId || e.course.lessons[0]?.id || "";
             return (
               <motion.div
                 key={e.id}

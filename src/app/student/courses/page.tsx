@@ -22,7 +22,6 @@ export default async function MyCoursesPage() {
           },
         },
       },
-      lastLesson: { select: { id: true } },
     },
     orderBy: { lastActiveAt: "desc" },
   });

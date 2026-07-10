@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { requireAdmin, requireModeratorOrAdmin } from "@/lib/auth";
+import { hashPassword, normalizeYemeniPhone } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 // ===== COURSES =====
@@ -657,5 +658,72 @@ export async function deletePostAction(id: string) {
   await requireModeratorOrAdmin();
   await db.communityPost.delete({ where: { id } });
   revalidatePath(`/admin/community`);
+  return { ok: true };
+}
+
+// ===== USER MANAGEMENT (Admin creates new student account) =====
+
+export type CreateUserResult = { ok: true; id: string } | { ok: false; error: string };
+
+export async function createUserAction(input: {
+  fullName: string;
+  phone: string;
+  password: string;
+  role?: "STUDENT" | "MODERATOR";
+}): Promise<CreateUserResult> {
+  await requireAdmin();
+
+  const fullName = (input.fullName || "").trim();
+  const phoneRaw = (input.phone || "").trim();
+  const password = (input.password || "").trim();
+  const role = input.role || "STUDENT";
+
+  if (!fullName || fullName.length < 3) return { ok: false, error: "auth.name.min" };
+  if (!password || password.length < 6) return { ok: false, error: "auth.password.min" };
+  const phone = normalizeYemeniPhone(phoneRaw);
+  if (!phone) return { ok: false, error: "auth.phone.hint" };
+
+  const exists = await db.user.findUnique({ where: { phone } });
+  if (exists) return { ok: false, error: "auth.phone.exists" };
+
+  const user = await db.user.create({
+    data: {
+      fullName,
+      phone,
+      passwordHash: hashPassword(password),
+      role,
+    },
+  });
+
+  // If created as moderator, also create moderator record (with no permissions initially)
+  if (role === "MODERATOR") {
+    await db.moderator.create({
+      data: {
+        userId: user.id,
+        canManageCourses: false,
+        canManagePayments: false,
+        canManageStudents: false,
+        canManageCommunity: false,
+        canManageAnnouncements: false,
+        canManageSettings: false,
+      },
+    });
+  }
+
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/moderators");
+  return { ok: true, id: user.id };
+}
+
+export async function deleteUserAction(id: string) {
+  await requireAdmin();
+  // Prevent admin from deleting themselves
+  const currentUser = await requireAdmin();
+  if (currentUser.id === id) {
+    return { ok: false, error: "Cannot delete yourself" };
+  }
+  await db.user.delete({ where: { id } });
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/moderators");
   return { ok: true };
 }

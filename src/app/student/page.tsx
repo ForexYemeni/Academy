@@ -29,7 +29,6 @@ export default async function StudentHomePage() {
             },
           },
         },
-        lastLesson: { select: { id: true, titleAr: true, titleEn: true } },
       },
       orderBy: { lastActiveAt: "desc" },
     }),
