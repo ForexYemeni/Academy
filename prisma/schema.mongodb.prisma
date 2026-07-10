@@ -1,0 +1,421 @@
+// ===========================================================================
+//  SonicAcademy — MongoDB Atlas Schema
+//  استخدم هذا الملف بدلاً من schema.prisma عند التبديل إلى MongoDB Atlas
+// ===========================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["mongoDb"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+//  User
+// ---------------------------------------------------------------------------
+model User {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  fullName        String
+  phone           String   @unique
+  passwordHash    String
+  role            String   @default("STUDENT") // ADMIN | MODERATOR | STUDENT
+  avatar          String?
+  preferredLang   String   @default("ar")
+  referralCode    String   @unique @default(auto()) @map("_id") @db.ObjectId
+  referredById    String?  @db.ObjectId
+  referredBy      User?    @relation("Referrals", fields: [referredById], references: [id])
+  referrals       User[]   @relation("Referrals")
+  referralRewards Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  lastLoginAt     DateTime?
+
+  enrollments   Enrollment[]
+  payments      Payment[]
+  audioProgress AudioProgress[]
+  posts         CommunityPost[]
+  comments      CommunityComment[]
+  replies       CommunityReply[]
+  likes         CommunityLike[]
+  notifications Notification[]
+  moderator     Moderator?
+  announcements Announcement[]
+
+  @@index([phone])
+  @@index([role])
+}
+
+// ---------------------------------------------------------------------------
+//  Category
+// ---------------------------------------------------------------------------
+model Category {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  nameAr    String
+  nameEn    String
+  icon      String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  courses   Course[]
+}
+
+// ---------------------------------------------------------------------------
+//  Course
+// ---------------------------------------------------------------------------
+model Course {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  titleAr       String
+  titleEn       String
+  descriptionAr String
+  descriptionEn String
+  coverImage    String?
+  price         Float    @default(0)
+  status        String   @default("DRAFT") // DRAFT | PUBLISHED | HIDDEN
+  level         String   @default("BEGINNER")
+  isFeatured    Boolean  @default(false)
+  order         Int      @default(0)
+  totalDuration Int      @default(0)
+  categoryId    String?  @db.ObjectId
+  category      Category? @relation(fields: [categoryId], references: [id])
+  lessons       Lesson[]
+  enrollments   Enrollment[]
+  subscriptions Subscription[]
+  posts         CommunityPost[]
+  payments      Payment[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  @@index([status])
+  @@index([isFeatured])
+}
+
+// ---------------------------------------------------------------------------
+//  Lesson
+// ---------------------------------------------------------------------------
+model Lesson {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  courseId      String   @db.ObjectId
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  titleAr       String
+  titleEn       String
+  descriptionAr String?
+  descriptionEn String?
+  audioData     String?
+  audioUrl      String?
+  audioSize     Int      @default(0)
+  duration      Int      @default(0)
+  pdfFiles      String?
+  attachments   String?
+  order         Int      @default(0)
+  isFree        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  progress      AudioProgress[]
+}
+
+// ---------------------------------------------------------------------------
+//  Subscription Plan
+// ---------------------------------------------------------------------------
+model SubscriptionPlan {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  nameAr       String
+  nameEn       String
+  duration     String   // ONE_MONTH | THREE_MONTHS | SIX_MONTHS | ONE_YEAR
+  monthsCount  Int
+  price        Float
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  subscriptions Subscription[]
+}
+
+// ---------------------------------------------------------------------------
+//  Enrollment
+// ---------------------------------------------------------------------------
+model Enrollment {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId        String   @db.ObjectId
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  subscriptionId  String?  @db.ObjectId
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+  progress        Float    @default(0)
+  completedLessons Int    @default(0)
+  totalListenSeconds Int  @default(0)
+  lastLessonId    String?
+  lastActiveAt    DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+// ---------------------------------------------------------------------------
+//  Subscription
+// ---------------------------------------------------------------------------
+model Subscription {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  courseId   String   @db.ObjectId
+  course     Course   @relation(fields: [courseId], references: [id])
+  planId     String   @db.ObjectId
+  plan       SubscriptionPlan @relation(fields: [planId], references: [id])
+  startDate  DateTime @default(now())
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  paymentId  String?  @db.ObjectId
+  payment    Payment? @relation(fields: [paymentId], references: [id])
+  enrollments Enrollment[]
+  createdAt  DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+//  Payment
+// ---------------------------------------------------------------------------
+model Payment {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @db.ObjectId
+  user          User     @relation(fields: [userId], references: [id])
+  courseId      String   @db.ObjectId
+  course        Course   @relation(fields: [courseId], references: [id])
+  planId        String?  @db.ObjectId
+  amount        Float
+  method        String   // JAWALI | JIB | ONE_CASH | CASH
+  status        String   @default("PENDING")
+  transferImage String?
+  operationNo   String?
+  notes         String?
+  rejectReason  String?
+  couponCode    String?
+  discount      Float    @default(0)
+  finalAmount   Float
+  subscription  Subscription?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+//  Wallet
+// ---------------------------------------------------------------------------
+model Wallet {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  method      String   @unique
+  nameAr      String
+  nameEn      String
+  number      String
+  qrCode      String?
+  image       String?
+  instructionsAr String?
+  instructionsEn String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+//  Audio Progress
+// ---------------------------------------------------------------------------
+model AudioProgress {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId     String   @db.ObjectId
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  currentTime  Float    @default(0)
+  duration     Float    @default(0)
+  completed    Boolean  @default(false)
+  lastPlayedAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@unique([userId, lessonId])
+}
+
+// ---------------------------------------------------------------------------
+//  Community
+// ---------------------------------------------------------------------------
+model CommunityPost {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  courseId     String   @db.ObjectId
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentAr   String?
+  contentEn   String?
+  images      String?
+  files       String?
+  isPinned    Boolean  @default(false)
+  likesCount  Int      @default(0)
+  commentsCount Int    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  comments    CommunityComment[]
+  likes       CommunityLike[]
+}
+
+model CommunityComment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentAr String?
+  contentEn String?
+  likesCount Int     @default(0)
+  createdAt DateTime @default(now())
+  replies   CommunityReply[]
+  likes     CommunityLike[]
+}
+
+model CommunityReply {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  commentId String   @db.ObjectId
+  comment   CommunityComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentAr String?
+  contentEn String?
+  createdAt DateTime @default(now())
+}
+
+model CommunityLike {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?  @db.ObjectId
+  post      CommunityPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?  @db.ObjectId
+  comment   CommunityComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+//  Notification
+// ---------------------------------------------------------------------------
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // NEW_LESSON | PAYMENT_APPROVED | ...
+  titleAr   String
+  titleEn   String
+  bodyAr    String?
+  bodyEn    String?
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+// ---------------------------------------------------------------------------
+//  Announcement
+// ---------------------------------------------------------------------------
+model Announcement {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  type      String   @default("NEWS")
+  titleAr   String
+  titleEn   String
+  bodyAr    String
+  bodyEn    String
+  createdBy String   @db.ObjectId
+  createdByUser User @relation(fields: [createdBy], references: [id])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+//  Coupon
+// ---------------------------------------------------------------------------
+model Coupon {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  code          String   @unique
+  type          String   // PERCENT | FIXED
+  value         Float
+  maxUses       Int      @default(0)
+  usedCount     Int      @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean  @default(true)
+  courseId      String?  @db.ObjectId
+  createdAt     DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+//  Moderator
+// ---------------------------------------------------------------------------
+model Moderator {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @unique @db.ObjectId
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  canManageCourses Boolean @default(false)
+  canManagePayments Boolean @default(false)
+  canManageStudents Boolean @default(false)
+  canManageCommunity Boolean @default(false)
+  canManageAnnouncements Boolean @default(false)
+  canManageSettings Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+//  Settings (singleton)
+// ---------------------------------------------------------------------------
+model Settings {
+  id                String   @id @default("singleton")
+  platformNameAr    String   @default("أكاديمية سونيك")
+  platformNameEn    String   @default("Sonic Academy")
+  logo              String?
+  favicon           String?
+  primaryColor      String   @default("#7C3AED")
+  accentColor       String   @default("#06B6D4")
+  descriptionAr     String?
+  descriptionEn     String?
+  contactEmail      String?
+  contactPhone      String?
+  contactAddress    String?
+  privacyAr         String?
+  privacyEn         String?
+  termsAr           String?
+  termsEn           String?
+  currency          String   @default("YER")
+  welcomeMessageAr  String?
+  welcomeMessageEn  String?
+  registrationEnabled Boolean @default(true)
+  communityEnabled  Boolean  @default(true)
+  notificationsEnabled Boolean @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+//  Testimonial & FAQ
+// ---------------------------------------------------------------------------
+model Testimonial {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  nameAr    String
+  nameEn    String
+  roleAr    String?
+  roleEn    String?
+  contentAr String
+  contentEn String
+  rating    Int      @default(5)
+  avatar    String?
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model FAQ {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  questionAr String
+  questionEn String
+  answerAr   String
+  answerEn   String
+  order      Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
