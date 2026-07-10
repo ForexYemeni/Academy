@@ -1,0 +1,21 @@
+{
+  "name": "Sonic Academy | أكاديمية سونيك",
+  "short_name": "SonicAcademy",
+  "description": "Premium audio learning platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0B14",
+  "theme_color": "#7C3AED",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
