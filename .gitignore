@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -52,3 +53,26 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# Database files (local dev only)
+db/*.db
+db/*.db-journal
+
+# Prisma backups
+prisma/*.sqlite-backup
+prisma/migrations/dev.db*
+
+# Agent browser sessions
+.agent-browser/
+
+# OS files
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+*.tsbuildinfo
