@@ -233,7 +233,8 @@ export function CourseCommunityClient({
                         toast.error(locale === "ar" ? "حجم الصورة كبير (1MB كحد أقصى)" : "Image too large (max 1MB)");
                         return;
                       }
-                      setImages((prev) => [...prev, await readImage(file)]);
+                      const dataUrl = await readImage(file);
+                      setImages((prev) => [...prev, dataUrl]);
                     }
                   }}
                 />
