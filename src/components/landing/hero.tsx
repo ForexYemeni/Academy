@@ -96,12 +96,12 @@ export function LandingHero({ settings }: { settings: any }) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-16 flex items-end justify-center gap-1.5 h-20"
+            className="mt-16 flex items-end justify-center gap-1 sm:gap-1.5 h-20 max-w-full overflow-hidden"
           >
-            {Array.from({ length: 32 }).map((_, i) => (
+            {Array.from({ length: 24 }).map((_, i) => (
               <motion.span
                 key={i}
-                className="w-1.5 sm:w-2 rounded-full bg-gradient-to-t from-primary to-accent"
+                className="w-1 sm:w-1.5 lg:w-2 rounded-full bg-gradient-to-t from-primary to-accent"
                 style={{ height: "100%" }}
                 animate={{
                   scaleY: [0.2, 0.4 + Math.random() * 0.6, 0.3, 0.7, 0.2],

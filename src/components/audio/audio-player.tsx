@@ -207,12 +207,12 @@ export function AudioPlayer({
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-1 sm:gap-2">
           {/* Left: speed */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="rounded-full gap-1.5">
+                <Button variant="ghost" size="sm" className="rounded-full gap-1.5 px-2 sm:px-3">
                   <Gauge className="w-4 h-4" />
                   <span className="font-mono text-xs">{speed}x</span>
                 </Button>
@@ -232,7 +232,7 @@ export function AudioPlayer({
           </div>
 
           {/* Center: transport */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {onPrev && (
               <Button
                 variant="ghost"
@@ -290,7 +290,7 @@ export function AudioPlayer({
           </div>
 
           {/* Right: volume */}
-          <div className="flex items-center gap-1 w-24">
+          <div className="flex items-center gap-1 w-12 sm:w-24 shrink-0">
             <Button
               variant="ghost"
               size="icon"

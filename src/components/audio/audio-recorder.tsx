@@ -212,11 +212,11 @@ export function AudioRecorder({
           <div className="font-mono text-4xl font-bold text-gradient mb-4">
             {formatTime(duration)}
           </div>
-          <div className="flex items-end justify-center gap-1 h-20">
+          <div className="flex items-end justify-center gap-1 h-20 max-w-full overflow-hidden">
             {levels.map((lvl, i) => (
               <motion.div
                 key={i}
-                className="w-1.5 sm:w-2 rounded-full bg-gradient-to-t from-primary to-accent"
+                className="w-1 sm:w-1.5 lg:w-2 rounded-full bg-gradient-to-t from-primary to-accent"
                 style={{ height: "100%", originY: 1 }}
                 animate={{
                   scaleY: state === "recording" ? Math.max(0.05, lvl) : 0.05,

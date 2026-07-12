@@ -121,15 +121,33 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* Prevent horizontal scroll on mobile from overflowing elements */
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    /* Respect mobile safe areas (notches, home indicator) */
+    overscroll-behavior-x: none;
   }
   /* Arabic numerals look better with these features */
   [dir="rtl"] {
     font-feature-settings: "ss01", "cv01";
+  }
+  /* Ensure all images/elements never cause horizontal scroll */
+  img, video, svg, canvas {
+    max-width: 100%;
+    height: auto;
+  }
+  /* Long words/URLs should wrap on mobile */
+  p, h1, h2, h3, h4, h5, h6, span, a, code {
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 }
 
